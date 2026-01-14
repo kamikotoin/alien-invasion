@@ -1,9 +1,10 @@
-import sys 
+import sys  
 
 import pygame
 
 from ship import Ship
 from settings import Settings
+from bullet import Bullet
 
 class AlienInvasion:
     """ класс для управления ресурсами и поведением игры """
@@ -13,9 +14,11 @@ class AlienInvasion:
         self.settings = Settings()
         self.screen =pygame.display.set_mode((self.settings.screen_width,self.settings.screen_height))
         
+
         pygame.display.set_caption("Alien invasion")
 
         self.ship = Ship(self)
+        self.bullets = pygame.sprite.Group()
 
     def run_game(self):
         """Запуск основного цикла игры"""
@@ -26,6 +29,8 @@ class AlienInvasion:
             self._update_screen()
             #update ship position
             self.ship.update()
+            #update bullets
+            self.bullets.update()
 
 
     def _check_events(self):
@@ -48,6 +53,8 @@ class AlienInvasion:
             self.ship.moving_left=True
         elif event.key==pygame.K_q:
             sys.exit()
+        elif event.key == pygame.K_SPACE:
+            self._fire_bullet()
 
     def _check_keyup_events(self, event):
         if event.key==pygame.K_RIGHT:
@@ -57,14 +64,18 @@ class AlienInvasion:
             #stop move to left
             self.ship.moving_left=False
         
-
+    def _fire_bullet(self):
+        new_bullet = Bullet(self)
+        self.bullets.add(new_bullet)
 
     def _update_screen(self):
-            #при каждом переходе меняет цвет на этот:
-            self.screen.fill(self.settings.bg_color)
-            self.ship.blitme()
-            #Отображение последнего прорисованного экрана
-            pygame.display.flip()
+        #при каждом переходе меняет цвет на этот:
+        self.screen.fill(self.settings.bg_color)
+        self.ship.blitme()
+        for bullet in self.bullets.sprites():
+            bullet.draw_bullet()
+        #Отображение последнего прорисованного экрана
+        pygame.display.flip()
 
 
 if __name__ =="__main__":
