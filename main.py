@@ -2,6 +2,7 @@ import sys
 
 import pygame
 
+from alien import Alien
 from ship import Ship
 from settings import Settings
 from bullet import Bullet
@@ -19,18 +20,46 @@ class AlienInvasion:
 
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
+        self.aliens = pygame.sprite.Group()
+
+        self._create_fleet()
+
+    def _create_fleet(self):
+        #create aliens
+        alien = Alien(self)
+        alien_width = alien.rect.width        
+        available_space_x = self.settings.screen_width-(alien_width*2)
+        alien_number_x = available_space_x//(alien_width*2)
+
+        #creating first row
+        for alien_number in range(alien_number_x):
+            self._create_alien(alien_number)
+    
+    def _create_alien(self, alien_number):
+            alien = Alien(self)
+            alien_width=alien.rect.width
+            alien.x = alien_width+2*alien_width*alien_number
+            alien.rect.x=alien.x
+            self.aliens.add(alien)        
 
     def run_game(self):
         """Запуск основного цикла игры"""
         while True:
             #checks for input
             self._check_events()
-            #creating everything on screen
-            self._update_screen()
             #update ship position
             self.ship.update()
-            #update bullets
-            self.bullets.update()
+            #update bullets delette bullets after reach top
+            self._update_bullets()
+            #creating everything on screen
+            self._update_screen()
+    
+    def _update_bullets(self):
+        self.bullets.update()
+        for bullet in self.bullets.copy():
+            if bullet.y<0:
+                self.bullets.remove(bullet)
+    
 
 
     def _check_events(self):
@@ -65,8 +94,9 @@ class AlienInvasion:
             self.ship.moving_left=False
         
     def _fire_bullet(self):
-        new_bullet = Bullet(self)
-        self.bullets.add(new_bullet)
+        if len(self.bullets)<self.settings.bullets_allowed:
+            new_bullet = Bullet(self)
+            self.bullets.add(new_bullet)
 
     def _update_screen(self):
         #при каждом переходе меняет цвет на этот:
@@ -74,6 +104,8 @@ class AlienInvasion:
         self.ship.blitme()
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
+        self.aliens.draw(self.screen)
+
         #Отображение последнего прорисованного экрана
         pygame.display.flip()
 
