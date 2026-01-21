@@ -26,6 +26,9 @@ class AlienInvasion:
 
         self._create_fleet()
 
+        #checks for remaining life
+        self.game_active = True
+
     def _create_fleet(self):
         #create aliens
         alien = Alien(self)
@@ -56,23 +59,51 @@ class AlienInvasion:
         while True:
             #checks for input
             self._check_events()
-            #update ship position
-            self.ship.update()
-            #update bullets delette bullets after reach top
-            self._update_bullets()
+            if self.game_active:
+                #update ship position
+                self.ship.update()
+                #update bullets delette bullets after reach top
+                self._update_bullets()
+                #alien moves
+                self._update_aliens()
             #creating everything on screen
             self._update_screen()
-            #alien moves
-            self._update_aliens()
     
     def _update_aliens(self):
         self._check_fleet_edges()
         self.aliens.update()
         #check for alien ship collision
         if pygame.sprite.spritecollideany(self.ship, self.aliens):
-            print("Ship hit!!!")
-            sys.exit()
-        
+            self._ship_hit()
+
+        self._check_aliens_bottom()
+    
+    def _ship_hit(self):
+        if self.stats.ships_left>1:
+            #decrease stats
+            self.stats.ships_left-=1
+
+            #empty everything except ship
+            self.aliens.empty()
+            self.bullets.empty()
+
+            #new fleet and center the ship
+            self._create_fleet()
+            self.ship.center_ship()
+
+            #pause for 0.5 sec
+            sleep(0.5)
+        else:
+            self.game_active = False
+
+    def _check_aliens_bottom(self):
+        #checks for alien reaching bottom of screen
+        screen_rect = self.screen.get_rect()
+        for alien in self.aliens:
+            if alien.rect.bottom>=screen_rect.bottom:
+                self._ship_hit()
+                break
+
     def _check_fleet_edges(self):
         for alien in self.aliens.sprites():
             if alien.check_edges():
